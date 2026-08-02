@@ -1,0 +1,13 @@
+{
+  "name": "새싹영단어",
+  "short_name": "새싹영단어",
+  "description": "필수 영단어 800 클릭발음 4지선다 퀴즈",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#eafbea",
+  "theme_color": "#3b9e3b",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
