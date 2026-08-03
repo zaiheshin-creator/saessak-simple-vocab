@@ -13,16 +13,22 @@
 <body>
   <div class="app">
     <header class="topbar">
-      <h1>🌱 새싹영단어</h1>
-      <button id="resetBtn" class="icon-btn" title="처음부터 다시 시작">↺</button>
+      <h1 id="appTitle">🌱 새싹영단어</h1>
+      <button id="resetBtn" class="icon-btn hidden" title="이 레벨 처음부터 다시 시작">↺</button>
     </header>
 
-    <div class="progress-wrap">
+    <section id="levelScreen" class="card level-screen">
+      <p class="level-intro">레벨을 선택해서 학습을 시작하세요</p>
+      <div id="levelList" class="level-list"></div>
+    </section>
+
+    <div id="progressWrap" class="progress-wrap hidden">
+      <button id="backBtn" class="back-btn">← 레벨 선택</button>
       <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-      <div id="progressText" class="progress-text">0 / 800</div>
+      <div id="progressText" class="progress-text">0 / 0</div>
     </div>
 
-    <main id="quizScreen" class="card">
+    <main id="quizScreen" class="card hidden">
       <div class="word-area" id="wordArea">
         <div id="wordText" class="word-text">word</div>
         <div class="hint">👆 단어를 클릭하면 발음을 들려줘요</div>
@@ -35,9 +41,10 @@
 
     <section id="doneScreen" class="card done-screen hidden">
       <div class="done-emoji">🎉</div>
-      <h2>800개 단어를 모두 마스터했어요!</h2>
+      <h2 id="doneTitle">이 레벨의 단어를 모두 마스터했어요!</h2>
       <p id="doneStats"></p>
-      <button id="restartBtn" class="primary-btn">다시 처음부터</button>
+      <button id="restartBtn" class="primary-btn">이 레벨 다시 학습</button>
+      <button id="doneBackBtn" class="secondary-btn">레벨 선택으로</button>
     </section>
   </div>
 
