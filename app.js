@@ -47,6 +47,30 @@
   let reviewTotal = 0;
 
   let audioCtx = null;
+  let preferredVoice = null;
+
+  function scoreVoice(v) {
+    const name = v.name.toLowerCase();
+    if (name.includes("online") && name.includes("natural")) return 4;
+    if (name.includes("google")) return 3;
+    if (name.includes("natural") || name.includes("neural")) return 2;
+    if (v.lang && v.lang.toLowerCase() === "en-us") return 1;
+    return 0;
+  }
+
+  function refreshPreferredVoice() {
+    if (!("speechSynthesis" in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    const enVoices = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith("en"));
+    if (!enVoices.length) return;
+    enVoices.sort((a, b) => scoreVoice(b) - scoreVoice(a));
+    preferredVoice = enVoices[0];
+  }
+
+  if ("speechSynthesis" in window) {
+    refreshPreferredVoice();
+    window.speechSynthesis.onvoiceschanged = refreshPreferredVoice;
+  }
 
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -223,6 +247,7 @@
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(word);
     utter.lang = "en-US";
+    if (preferredVoice) utter.voice = preferredVoice;
     utter.rate = rate || 0.9;
     wordArea.classList.add("speaking");
     utter.onend = () => wordArea.classList.remove("speaking");
