@@ -110,6 +110,20 @@ html, body {
   color: #8ba48b;
 }
 
+.slow-btn {
+  display: block;
+  margin: 0 auto 14px;
+  background: #eaf4ff;
+  border: 1px solid #b9d9f5;
+  color: #2f6da0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.slow-btn:hover { background: #dcecff; }
+
 .hint-row {
   display: flex;
   flex-direction: column;

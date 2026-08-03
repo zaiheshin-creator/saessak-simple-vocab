@@ -28,6 +28,7 @@
   const doneBackBtn = document.getElementById("doneBackBtn");
   const hintBtn = document.getElementById("hintBtn");
   const hintText = document.getElementById("hintText");
+  const slowBtn = document.getElementById("slowBtn");
 
   const poolsByLevel = {};
   LEVELS.forEach((lv) => {
@@ -217,12 +218,12 @@
     renderQuestion();
   }
 
-  function speak(word) {
+  function speak(word, rate) {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(word);
     utter.lang = "en-US";
-    utter.rate = 0.9;
+    utter.rate = rate || 0.9;
     wordArea.classList.add("speaking");
     utter.onend = () => wordArea.classList.remove("speaking");
     window.speechSynthesis.speak(utter);
@@ -395,6 +396,10 @@
 
   wordArea.addEventListener("click", () => {
     if (current !== null) speak(pool[current].word);
+  });
+
+  slowBtn.addEventListener("click", () => {
+    if (current !== null) speak(pool[current].word, 0.5);
   });
 
   hintBtn.addEventListener("click", () => {
