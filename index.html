@@ -24,6 +24,7 @@
 
     <div id="progressWrap" class="progress-wrap hidden">
       <button id="backBtn" class="back-btn">← 레벨 선택</button>
+      <div id="roundLabel" class="round-label"></div>
       <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
       <div id="progressText" class="progress-text">0 / 0</div>
     </div>
@@ -32,6 +33,11 @@
       <div class="word-area" id="wordArea">
         <div id="wordText" class="word-text">word</div>
         <div class="hint">👆 단어를 클릭하면 발음을 들려줘요</div>
+      </div>
+
+      <div class="hint-row">
+        <button id="hintBtn" class="hint-btn">💡 힌트</button>
+        <div id="hintText" class="hint-text hidden"></div>
       </div>
 
       <div id="choices" class="choices"></div>

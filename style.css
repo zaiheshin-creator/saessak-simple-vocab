@@ -67,6 +67,13 @@ html, body {
   text-align: right;
 }
 
+.round-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #3b7d3b;
+  margin-bottom: 6px;
+}
+
 .card {
   background: #ffffff;
   border-radius: 20px;
@@ -101,6 +108,33 @@ html, body {
   margin-top: 10px;
   font-size: 13px;
   color: #8ba48b;
+}
+
+.hint-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.hint-btn {
+  background: #fff8e1;
+  border: 1px solid #f3d98b;
+  color: #9a7b1f;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hint-btn:hover { background: #fff2cc; }
+.hint-btn:disabled { opacity: 0.5; cursor: default; }
+
+.hint-text {
+  font-size: 13px;
+  color: #9a7b1f;
+  font-weight: 600;
 }
 
 .choices {
@@ -270,6 +304,19 @@ html, body {
   height: 100%;
   background: linear-gradient(90deg, #6fcf6f, #3b9e3b);
 }
+
+.wrong-note-btn {
+  margin-top: 8px;
+  background: #fdeceb;
+  border: 1px solid #f3b8b3;
+  color: #b23b30;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.wrong-note-btn:hover { background: #fbdedb; }
 
 .back-btn {
   background: none;
