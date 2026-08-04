@@ -319,8 +319,14 @@ html, body {
   background: linear-gradient(90deg, #6fcf6f, #3b9e3b);
 }
 
-.wrong-note-btn {
+.level-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 8px;
+}
+
+.wrong-note-btn {
   background: #fdeceb;
   border: 1px solid #f3b8b3;
   color: #b23b30;
@@ -331,6 +337,18 @@ html, body {
   cursor: pointer;
 }
 .wrong-note-btn:hover { background: #fbdedb; }
+
+.review-note-btn {
+  background: #eaf4ff;
+  border: 1px solid #b9d9f5;
+  color: #2f6da0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.review-note-btn:hover { background: #dcecff; }
 
 .back-btn {
   background: none;

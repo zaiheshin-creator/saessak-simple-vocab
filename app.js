@@ -1,6 +1,8 @@
 (function () {
   const STORAGE_PREFIX = "saessak-vocab-progress-v3-level-";
   const ROUND_SIZE = 30;
+  const REVIEW_INTERVALS_DAYS = [1, 2, 4, 7, 15, 30];
+  const DAY_MS = 24 * 60 * 60 * 1000;
 
   const LEVELS = [
     { id: 1, name: "초급", badge: "🌱", sub: "기초 생활 단어" },
@@ -42,9 +44,11 @@
   let locked = false;
   let hintUsed = false;
 
-  let reviewMode = false;
+  let mode = "round"; // "round" | "wrongnote" | "srs"
   let reviewQueue = [];
   let reviewTotal = 0;
+  let srsQueue = [];
+  let srsTotal = 0;
 
   let audioCtx = null;
   let preferredVoice = null;
@@ -126,11 +130,27 @@
       roundMasteredCount: 0,
       mistakeCount: 0,
       wrongEver: [],
+      reviewBox: {},
     };
   }
 
   function saveState() {
     localStorage.setItem(storageKey(currentLevel), JSON.stringify(state));
+  }
+
+  function scheduleReview(idx, box) {
+    const clamped = Math.min(box, REVIEW_INTERVALS_DAYS.length - 1);
+    state.reviewBox[idx] = {
+      box: clamped,
+      nextReviewAt: Date.now() + REVIEW_INTERVALS_DAYS[clamped] * DAY_MS,
+    };
+  }
+
+  function dueReviewIndices(reviewBox) {
+    const now = Date.now();
+    return Object.keys(reviewBox)
+      .map((k) => Number(k))
+      .filter((idx) => reviewBox[idx].nextReviewAt <= now);
   }
 
   function playCorrectSound() {
@@ -165,6 +185,7 @@
       const saved = loadState(lv.id);
       const mastered = saved ? totalMasteredFor(saved) : 0;
       const wrongCount = saved ? saved.wrongEver.length : 0;
+      const dueCount = saved ? dueReviewIndices(saved.reviewBox || {}).length : 0;
       const pct = total ? Math.round((mastered / total) * 100) : 0;
       const totalRounds = totalRoundsFor(lv.id);
       const roundNo = saved ? Math.min(saved.currentRoundIndex + 1, totalRounds) : 1;
@@ -177,9 +198,23 @@
           <div class="level-name">${lv.name}</div>
           <div class="level-sub">${lv.sub} · ${mastered} / ${total} · 회차 ${roundNo}/${totalRounds}</div>
           <div class="level-progress-bar"><div class="level-progress-fill" style="width:${pct}%"></div></div>
+          <div class="level-chip-row"></div>
         </div>
       `;
       card.addEventListener("click", () => startLevel(lv.id));
+
+      const chipRow = card.querySelector(".level-chip-row");
+
+      if (dueCount > 0) {
+        const reviewBtn = document.createElement("button");
+        reviewBtn.className = "review-note-btn";
+        reviewBtn.textContent = `🔁 복습 (${dueCount})`;
+        reviewBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          startSrsReview(lv.id);
+        });
+        chipRow.appendChild(reviewBtn);
+      }
 
       if (wrongCount > 0) {
         const wrongBtn = document.createElement("button");
@@ -187,19 +222,24 @@
         wrongBtn.textContent = `오답노트 (${wrongCount})`;
         wrongBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          startReview(lv.id);
+          startWrongReview(lv.id);
         });
-        card.querySelector(".level-info").appendChild(wrongBtn);
+        chipRow.appendChild(wrongBtn);
       }
 
       levelListEl.appendChild(card);
     });
   }
 
+  function ensureReviewBox(st) {
+    if (!st.reviewBox) st.reviewBox = {};
+    return st;
+  }
+
   function showLevelScreen() {
     if (currentLevel !== null) saveState();
     currentLevel = null;
-    reviewMode = false;
+    mode = "round";
     renderLevelList();
     levelScreen.classList.remove("hidden");
     progressWrap.classList.add("hidden");
@@ -211,9 +251,9 @@
   function startLevel(levelId) {
     currentLevel = levelId;
     pool = poolsByLevel[levelId];
-    state = loadState(levelId) || newState(levelId);
+    state = ensureReviewBox(loadState(levelId) || newState(levelId));
     saveState();
-    reviewMode = false;
+    mode = "round";
 
     levelScreen.classList.add("hidden");
     progressWrap.classList.remove("hidden");
@@ -224,14 +264,33 @@
     renderQuestion();
   }
 
-  function startReview(levelId) {
+  function startWrongReview(levelId) {
     currentLevel = levelId;
     pool = poolsByLevel[levelId];
-    state = loadState(levelId) || newState(levelId);
+    state = ensureReviewBox(loadState(levelId) || newState(levelId));
     if (!state.wrongEver.length) return;
-    reviewMode = true;
+    mode = "wrongnote";
     reviewQueue = shuffle([...state.wrongEver]);
     reviewTotal = reviewQueue.length;
+
+    levelScreen.classList.add("hidden");
+    progressWrap.classList.remove("hidden");
+    quizScreen.classList.remove("hidden");
+    doneScreen.classList.add("hidden");
+    resetBtn.classList.add("hidden");
+
+    renderQuestion();
+  }
+
+  function startSrsReview(levelId) {
+    currentLevel = levelId;
+    pool = poolsByLevel[levelId];
+    state = ensureReviewBox(loadState(levelId) || newState(levelId));
+    const due = dueReviewIndices(state.reviewBox);
+    if (!due.length) return;
+    mode = "srs";
+    srsQueue = shuffle(due);
+    srsTotal = srsQueue.length;
 
     levelScreen.classList.add("hidden");
     progressWrap.classList.remove("hidden");
@@ -255,11 +314,16 @@
   }
 
   function updateProgress() {
-    if (reviewMode) {
+    if (mode === "wrongnote") {
       const done = reviewTotal - reviewQueue.length;
       roundLabel.textContent = "📝 오답노트 복습";
       progressText.textContent = `${done} / ${reviewTotal}`;
       progressFill.style.width = reviewTotal ? Math.round((done / reviewTotal) * 100) + "%" : "0%";
+    } else if (mode === "srs") {
+      const done = srsTotal - srsQueue.length;
+      roundLabel.textContent = "🔁 복습";
+      progressText.textContent = `${done} / ${srsTotal}`;
+      progressFill.style.width = srsTotal ? Math.round((done / srsTotal) * 100) + "%" : "0%";
     } else {
       const totalRounds = totalRoundsFor(currentLevel);
       const roundSize = roundWords(currentLevel, state.currentRoundIndex, state.order).length;
@@ -286,12 +350,18 @@
   }
 
   function renderQuestion() {
-    if (reviewMode) {
+    if (mode === "wrongnote") {
       if (reviewQueue.length === 0) {
         showReviewDone();
         return;
       }
       current = reviewQueue[0];
+    } else if (mode === "srs") {
+      if (srsQueue.length === 0) {
+        showSrsDone();
+        return;
+      }
+      current = srsQueue[0];
     } else {
       if (state.roundQueue.length === 0) {
         handleRoundComplete();
@@ -345,13 +415,17 @@
       feedbackEl.className = "feedback correct-msg";
       playCorrectSound();
 
-      if (reviewMode) {
+      if (mode === "wrongnote") {
         reviewQueue.shift();
         removeWrong(correctIdx);
-        saveState();
+      } else if (mode === "srs") {
+        srsQueue.shift();
+        const info = state.reviewBox[correctIdx];
+        scheduleReview(correctIdx, (info ? info.box : 0) + 1);
       } else {
         state.roundQueue.shift();
         state.roundMasteredCount++;
+        scheduleReview(correctIdx, 0);
       }
     } else {
       btnEl.classList.add("wrong");
@@ -361,10 +435,16 @@
       feedbackEl.textContent = `틀렸어요. 정답: ${pool[correctIdx].meaning}`;
       feedbackEl.className = "feedback wrong-msg";
 
-      if (reviewMode) {
+      if (mode === "wrongnote") {
         const reinsertAt = Math.min(reviewQueue.length, 3 + Math.floor(Math.random() * 5));
         reviewQueue.splice(0, 1);
         reviewQueue.splice(reinsertAt, 0, correctIdx);
+      } else if (mode === "srs") {
+        const reinsertAt = Math.min(srsQueue.length, 3 + Math.floor(Math.random() * 5));
+        srsQueue.splice(0, 1);
+        srsQueue.splice(reinsertAt, 0, correctIdx);
+        addWrong(correctIdx);
+        scheduleReview(correctIdx, 0);
       } else {
         state.mistakeCount++;
         addWrong(correctIdx);
@@ -372,10 +452,9 @@
         const reinsertAt = Math.min(state.roundQueue.length, 3 + Math.floor(Math.random() * 5));
         state.roundQueue.splice(reinsertAt, 0, correctIdx);
       }
-      saveState();
     }
 
-    if (!reviewMode) saveState();
+    saveState();
     updateProgress();
 
     setTimeout(renderQuestion, isCorrect ? 700 : 1300);
@@ -419,6 +498,15 @@
     restartBtn.classList.add("hidden");
   }
 
+  function showSrsDone() {
+    quizScreen.classList.add("hidden");
+    progressWrap.classList.add("hidden");
+    doneScreen.classList.remove("hidden");
+    doneTitle.textContent = "오늘 복습을 모두 마쳤어요!";
+    doneStats.textContent = "다음 복습은 며칠 뒤에 다시 찾아와요.";
+    restartBtn.classList.add("hidden");
+  }
+
   wordArea.addEventListener("click", () => {
     if (current !== null) speak(pool[current].word);
   });
@@ -437,7 +525,7 @@
   });
 
   resetBtn.addEventListener("click", () => {
-    if (reviewMode) return;
+    if (mode !== "round") return;
     if (confirm("이 레벨을 처음부터 다시 시작할까요? 진행 상황이 초기화됩니다.")) {
       state = newState(currentLevel);
       saveState();
@@ -448,7 +536,7 @@
   restartBtn.addEventListener("click", () => {
     state = newState(currentLevel);
     saveState();
-    reviewMode = false;
+    mode = "round";
     doneScreen.classList.add("hidden");
     progressWrap.classList.remove("hidden");
     quizScreen.classList.remove("hidden");
