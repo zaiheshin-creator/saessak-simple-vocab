@@ -350,6 +350,104 @@ html, body {
   color: #a9c0a9;
 }
 
+.summary-open-btn {
+  margin-top: 4px;
+  background: #eef6ff;
+  border: 1px solid #b9d9f5;
+  color: #2f6da0;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.summary-open-btn:hover { background: #dcecff; }
+
+.summary-screen {
+  gap: 10px;
+}
+
+.summary-title {
+  margin: 4px 0 10px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.summary-today-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.summary-stat {
+  background: #f5faf5;
+  border: 1px solid #e2f3e2;
+  border-radius: 14px;
+  padding: 14px 6px;
+  text-align: center;
+}
+
+.summary-stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2a6b2a;
+}
+
+.summary-stat-label {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #7a927a;
+}
+
+.summary-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #5a7a5a;
+  margin-bottom: 8px;
+}
+
+.summary-weak-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-weak-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fdeceb;
+  border: 1px solid #f3b8b3;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.summary-weak-word {
+  font-weight: 700;
+  color: #7a2a20;
+}
+
+.summary-weak-meaning {
+  font-size: 12px;
+  color: #9a5a50;
+  margin-left: 6px;
+}
+
+.summary-weak-count {
+  font-size: 12px;
+  font-weight: 800;
+  color: #b23b30;
+  white-space: nowrap;
+}
+
+.summary-empty {
+  text-align: center;
+  color: #a9c0a9;
+  font-size: 13px;
+  padding: 20px 0;
+}
+
 .level-card {
   display: flex;
   align-items: center;

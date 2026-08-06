@@ -34,6 +34,11 @@
   const wordHint = document.getElementById("wordHint");
   const directionTag = document.getElementById("directionTag");
   const directionModeSelector = document.getElementById("directionModeSelector");
+  const summaryScreen = document.getElementById("summaryScreen");
+  const summaryOpenBtn = document.getElementById("summaryOpenBtn");
+  const summaryBackBtn = document.getElementById("summaryBackBtn");
+  const summaryTodayBox = document.getElementById("summaryTodayBox");
+  const summaryWeakList = document.getElementById("summaryWeakList");
 
   const DIRECTION_MODE_KEY = "saessak-vocab-direction-mode";
   let directionModeSetting = localStorage.getItem(DIRECTION_MODE_KEY) || "mixed";
@@ -152,7 +157,44 @@
       mistakeCount: 0,
       wrongEver: [],
       reviewBox: {},
+      wrongCounts: {},
     };
+  }
+
+  function ensureWrongCounts(st) {
+    if (!st.wrongCounts) st.wrongCounts = {};
+    return st;
+  }
+
+  function incWrongCount(idx) {
+    state.wrongCounts[idx] = (state.wrongCounts[idx] || 0) + 1;
+  }
+
+  const DAILY_STATS_KEY = "saessak-vocab-daily-stats";
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function loadDailyStats() {
+    let stats = null;
+    try {
+      stats = JSON.parse(localStorage.getItem(DAILY_STATS_KEY) || "null");
+    } catch (e) {}
+    if (!stats || stats.date !== todayStr()) {
+      stats = { date: todayStr(), attempted: 0, correct: 0, wrong: 0, newlyMastered: 0 };
+    }
+    return stats;
+  }
+
+  function recordDailyAnswer(isCorrect, isNewMastery) {
+    const stats = loadDailyStats();
+    stats.attempted++;
+    if (isCorrect) stats.correct++;
+    else stats.wrong++;
+    if (isNewMastery) stats.newlyMastered++;
+    localStorage.setItem(DAILY_STATS_KEY, JSON.stringify(stats));
   }
 
   function saveState() {
@@ -268,16 +310,64 @@
       updatedLabel.textContent = `최종 업데이트: ${APP_VERSION_DATE}`;
     }
     levelScreen.classList.remove("hidden");
+    summaryScreen.classList.add("hidden");
     progressWrap.classList.add("hidden");
     quizScreen.classList.add("hidden");
     doneScreen.classList.add("hidden");
     resetBtn.classList.add("hidden");
   }
 
+  function renderSummary() {
+    const stats = loadDailyStats();
+    const accuracy = stats.attempted ? Math.round((stats.correct / stats.attempted) * 100) : 0;
+    summaryTodayBox.innerHTML = `
+      <div class="summary-stat"><div class="summary-stat-value">${stats.attempted}</div><div class="summary-stat-label">오늘 푼 문제</div></div>
+      <div class="summary-stat"><div class="summary-stat-value">${stats.newlyMastered}</div><div class="summary-stat-label">오늘 새로 외운 단어</div></div>
+      <div class="summary-stat"><div class="summary-stat-value">${accuracy}%</div><div class="summary-stat-label">오늘 정답률</div></div>
+    `;
+
+    const weak = [];
+    LEVELS.forEach((lv) => {
+      const saved = loadState(lv.id);
+      if (!saved || !saved.wrongCounts) return;
+      const p = poolsByLevel[lv.id];
+      Object.keys(saved.wrongCounts).forEach((k) => {
+        const idx = Number(k);
+        const count = saved.wrongCounts[idx];
+        if (count >= 2 && p[idx]) {
+          weak.push({ word: p[idx].word, meaning: p[idx].meaning, count, levelName: lv.name });
+        }
+      });
+    });
+    weak.sort((a, b) => b.count - a.count);
+    const top = weak.slice(0, 10);
+
+    if (!top.length) {
+      summaryWeakList.innerHTML = `<div class="summary-empty">아직 2번 이상 틀린 단어가 없어요! 👍</div>`;
+    } else {
+      summaryWeakList.innerHTML = top
+        .map(
+          (w) => `
+        <div class="summary-weak-item">
+          <div><span class="summary-weak-word">${w.word}</span><span class="summary-weak-meaning">${w.meaning}</span></div>
+          <div class="summary-weak-count">${w.count}번 틀림 · ${w.levelName}</div>
+        </div>
+      `
+        )
+        .join("");
+    }
+  }
+
+  function showSummaryScreen() {
+    levelScreen.classList.add("hidden");
+    summaryScreen.classList.remove("hidden");
+    renderSummary();
+  }
+
   function startLevel(levelId) {
     currentLevel = levelId;
     pool = poolsByLevel[levelId];
-    state = ensureReviewBox(loadState(levelId) || newState(levelId));
+    state = ensureWrongCounts(ensureReviewBox(loadState(levelId) || newState(levelId)));
     saveState();
     mode = "round";
 
@@ -293,7 +383,7 @@
   function startWrongReview(levelId) {
     currentLevel = levelId;
     pool = poolsByLevel[levelId];
-    state = ensureReviewBox(loadState(levelId) || newState(levelId));
+    state = ensureWrongCounts(ensureReviewBox(loadState(levelId) || newState(levelId)));
     if (!state.wrongEver.length) return;
     mode = "wrongnote";
     reviewQueue = shuffle([...state.wrongEver]);
@@ -311,7 +401,7 @@
   function startSrsReview(levelId) {
     currentLevel = levelId;
     pool = poolsByLevel[levelId];
-    state = ensureReviewBox(loadState(levelId) || newState(levelId));
+    state = ensureWrongCounts(ensureReviewBox(loadState(levelId) || newState(levelId)));
     const due = dueReviewIndices(state.reviewBox);
     if (!due.length) return;
     mode = "srs";
@@ -463,6 +553,8 @@
     allBtns.forEach((b) => b.classList.add("disabled"));
 
     const isCorrect = selectedIdx === correctIdx;
+    const isNewMastery = mode === "round" && isCorrect;
+    recordDailyAnswer(isCorrect, isNewMastery);
 
     if (isCorrect) {
       btnEl.classList.add("correct");
@@ -489,6 +581,8 @@
       });
       feedbackEl.textContent = `틀렸어요. 정답: ${correctDisplay(correctIdx)}`;
       feedbackEl.className = "feedback wrong-msg";
+
+      incWrongCount(correctIdx);
 
       if (mode === "wrongnote") {
         const reinsertAt = Math.min(reviewQueue.length, 3 + Math.floor(Math.random() * 5));
@@ -606,6 +700,8 @@
 
   backBtn.addEventListener("click", showLevelScreen);
   doneBackBtn.addEventListener("click", showLevelScreen);
+  summaryOpenBtn.addEventListener("click", showSummaryScreen);
+  summaryBackBtn.addEventListener("click", showLevelScreen);
 
   showLevelScreen();
 })();
