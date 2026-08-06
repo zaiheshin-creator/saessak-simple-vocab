@@ -244,6 +244,10 @@
     currentLevel = null;
     mode = "round";
     renderLevelList();
+    const updatedLabel = document.getElementById("updatedLabel");
+    if (updatedLabel && typeof APP_VERSION_DATE !== "undefined") {
+      updatedLabel.textContent = `최종 업데이트: ${APP_VERSION_DATE}`;
+    }
     levelScreen.classList.remove("hidden");
     progressWrap.classList.add("hidden");
     quizScreen.classList.add("hidden");

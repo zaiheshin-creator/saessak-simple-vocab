@@ -309,6 +309,13 @@ html, body {
   gap: 14px;
 }
 
+.updated-label {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 11px;
+  color: #a9c0a9;
+}
+
 .level-card {
   display: flex;
   align-items: center;
