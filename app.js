@@ -384,14 +384,20 @@
       wordHint.classList.remove("hidden");
       slowBtn.classList.remove("hidden");
       wordArea.classList.remove("no-audio");
-      directionTag.textContent = "단어 → 뜻";
+      directionTag.textContent = "🔤 단어 → 뜻";
+      directionTag.className = "direction-tag tag-forward";
+      quizScreen.classList.remove("dir-reverse");
+      quizScreen.classList.add("dir-forward");
     } else {
       wordText.textContent = w.meaning;
       wordText.classList.add("reverse-text");
       wordHint.classList.add("hidden");
       slowBtn.classList.add("hidden");
       wordArea.classList.add("no-audio");
-      directionTag.textContent = "뜻 → 단어";
+      directionTag.textContent = "🔍 뜻 → 단어";
+      directionTag.className = "direction-tag tag-reverse";
+      quizScreen.classList.remove("dir-forward");
+      quizScreen.classList.add("dir-reverse");
     }
 
     feedbackEl.textContent = "";
