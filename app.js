@@ -31,6 +31,8 @@
   const hintBtn = document.getElementById("hintBtn");
   const hintText = document.getElementById("hintText");
   const slowBtn = document.getElementById("slowBtn");
+  const wordHint = document.getElementById("wordHint");
+  const directionTag = document.getElementById("directionTag");
 
   const poolsByLevel = {};
   LEVELS.forEach((lv) => {
@@ -43,6 +45,7 @@
   let current = null;
   let locked = false;
   let hintUsed = false;
+  let direction = "forward";
 
   let mode = "round"; // "round" | "wrongnote" | "srs"
   let reviewQueue = [];
@@ -372,8 +375,25 @@
 
     locked = false;
     resetHint();
+    direction = Math.random() < 0.5 ? "forward" : "reverse";
     const w = pool[current];
-    wordText.textContent = w.word;
+
+    if (direction === "forward") {
+      wordText.textContent = w.word;
+      wordText.classList.remove("reverse-text");
+      wordHint.classList.remove("hidden");
+      slowBtn.classList.remove("hidden");
+      wordArea.classList.remove("no-audio");
+      directionTag.textContent = "단어 → 뜻";
+    } else {
+      wordText.textContent = w.meaning;
+      wordText.classList.add("reverse-text");
+      wordHint.classList.add("hidden");
+      slowBtn.classList.add("hidden");
+      wordArea.classList.add("no-audio");
+      directionTag.textContent = "뜻 → 단어";
+    }
+
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
 
@@ -382,13 +402,17 @@
     optionIdxs.forEach((idx) => {
       const btn = document.createElement("button");
       btn.className = "choice-btn";
-      btn.textContent = pool[idx].meaning;
+      btn.textContent = direction === "forward" ? pool[idx].meaning : pool[idx].word;
       btn.addEventListener("click", () => handleAnswer(idx, current, btn));
       choicesEl.appendChild(btn);
     });
 
-    speak(w.word);
+    if (direction === "forward") speak(w.word);
     updateProgress();
+  }
+
+  function correctDisplay(idx) {
+    return direction === "forward" ? pool[idx].meaning : pool[idx].word;
   }
 
   function addWrong(idx) {
@@ -430,9 +454,9 @@
     } else {
       btnEl.classList.add("wrong");
       allBtns.forEach((b) => {
-        if (b.textContent === pool[correctIdx].meaning) b.classList.add("correct");
+        if (b.textContent === correctDisplay(correctIdx)) b.classList.add("correct");
       });
-      feedbackEl.textContent = `틀렸어요. 정답: ${pool[correctIdx].meaning}`;
+      feedbackEl.textContent = `틀렸어요. 정답: ${correctDisplay(correctIdx)}`;
       feedbackEl.className = "feedback wrong-msg";
 
       if (mode === "wrongnote") {
@@ -508,19 +532,24 @@
   }
 
   wordArea.addEventListener("click", () => {
-    if (current !== null) speak(pool[current].word);
+    if (current !== null && direction === "forward") speak(pool[current].word);
   });
 
   slowBtn.addEventListener("click", () => {
-    if (current !== null) speak(pool[current].word, 0.5);
+    if (current !== null && direction === "forward") speak(pool[current].word, 0.5);
   });
 
   hintBtn.addEventListener("click", () => {
     if (hintUsed || current === null) return;
     hintUsed = true;
     hintBtn.disabled = true;
-    const meaning = pool[current].meaning;
-    hintText.textContent = `힌트: '${meaning[0]}'로 시작해요`;
+    if (direction === "forward") {
+      const meaning = pool[current].meaning;
+      hintText.textContent = `힌트: '${meaning[0]}'로 시작해요`;
+    } else {
+      const word = pool[current].word;
+      hintText.textContent = `힌트: '${word[0].toUpperCase()}'로 시작해요`;
+    }
     hintText.classList.remove("hidden");
   });
 
