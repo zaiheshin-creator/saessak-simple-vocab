@@ -19,6 +19,14 @@
 
     <section id="levelScreen" class="card level-screen">
       <p class="level-intro">레벨을 선택해서 학습을 시작하세요</p>
+
+      <div class="mode-select-label">출제 방식</div>
+      <div id="directionModeSelector" class="direction-mode-selector">
+        <button class="dir-mode-btn" data-mode="forward">🔤 단어→뜻</button>
+        <button class="dir-mode-btn" data-mode="reverse">🔍 뜻→단어</button>
+        <button class="dir-mode-btn" data-mode="mixed">🔀 섞어서</button>
+      </div>
+
       <div id="levelList" class="level-list"></div>
       <div id="updatedLabel" class="updated-label"></div>
     </section>

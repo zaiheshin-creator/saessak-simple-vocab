@@ -33,6 +33,24 @@
   const slowBtn = document.getElementById("slowBtn");
   const wordHint = document.getElementById("wordHint");
   const directionTag = document.getElementById("directionTag");
+  const directionModeSelector = document.getElementById("directionModeSelector");
+
+  const DIRECTION_MODE_KEY = "saessak-vocab-direction-mode";
+  let directionModeSetting = localStorage.getItem(DIRECTION_MODE_KEY) || "mixed";
+
+  function renderDirectionModeSelector() {
+    directionModeSelector.querySelectorAll(".dir-mode-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.mode === directionModeSetting);
+    });
+  }
+
+  directionModeSelector.querySelectorAll(".dir-mode-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      directionModeSetting = btn.dataset.mode;
+      localStorage.setItem(DIRECTION_MODE_KEY, directionModeSetting);
+      renderDirectionModeSelector();
+    });
+  });
 
   const poolsByLevel = {};
   LEVELS.forEach((lv) => {
@@ -244,6 +262,7 @@
     currentLevel = null;
     mode = "round";
     renderLevelList();
+    renderDirectionModeSelector();
     const updatedLabel = document.getElementById("updatedLabel");
     if (updatedLabel && typeof APP_VERSION_DATE !== "undefined") {
       updatedLabel.textContent = `최종 업데이트: ${APP_VERSION_DATE}`;
@@ -379,7 +398,9 @@
 
     locked = false;
     resetHint();
-    direction = Math.random() < 0.5 ? "forward" : "reverse";
+    if (directionModeSetting === "forward") direction = "forward";
+    else if (directionModeSetting === "reverse") direction = "reverse";
+    else direction = Math.random() < 0.5 ? "forward" : "reverse";
     const w = pool[current];
 
     if (direction === "forward") {

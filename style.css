@@ -303,6 +303,40 @@ html, body {
   text-align: center;
 }
 
+.mode-select-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8ba48b;
+  margin-bottom: 6px;
+}
+
+.direction-mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.dir-mode-btn {
+  background: #f5faf5;
+  border: 2px solid #e2f3e2;
+  border-radius: 12px;
+  padding: 9px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5a7a5a;
+  cursor: pointer;
+  text-align: center;
+}
+.dir-mode-btn:hover { background: #ecf7ec; }
+
+.dir-mode-btn.active {
+  background: #3b9e3b;
+  border-color: #3b9e3b;
+  color: #fff;
+}
+
 .level-list {
   display: flex;
   flex-direction: column;
